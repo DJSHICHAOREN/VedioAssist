@@ -1,0 +1,23 @@
+model:
+  name: "Qwen/Qwen2.5-1.5B-Instruct"
+  local_path: "./models/qwen2.5-1.5b-original"
+  output_path: "./models/qwen2.5-1.5b-optimized"
+
+pruning:
+  sparsity: 0.25
+  calibration_samples: 128
+  sequence_length: 2048
+  layer_keep_ratio:
+    start: 1.0
+    end: 0.6
+
+quantization:
+  type: "Q4_K_M"
+
+evaluation:
+  test_prompts:
+    - "Translate to Chinese: The weather is beautiful today."
+    - "Explain the word 'serendipity' in simple English."
+    - "What does the phrase 'break a leg' mean?"
+    - "用中文解释'photosynthesis'这个词。"
+  comparison_output: "./eval_results/"

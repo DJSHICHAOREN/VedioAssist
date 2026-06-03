@@ -1,0 +1,7 @@
+torch>=2.0.0
+transformers>=4.36.0
+accelerate>=0.25.0
+sentencepiece>=0.1.99
+datasets>=2.16.0
+pyyaml>=6.0
+tqdm>=4.65.0
