@@ -1,0 +1,106 @@
+<h2>点击红点 — 整句解释面板</h2>
+<p class="subtitle">点击句子开头的 🔴 红点，弹出完整句子分析</p>
+
+<div class="section">
+  <h3>整句解释面板</h3>
+  <div class="mockup">
+    <div class="mockup-header">点击红点后的弹窗</div>
+    <div class="mockup-body">
+      <div style="max-width:375px;margin:0 auto;background:#0f172a;border-radius:16px;overflow:hidden;border:1px solid #334155">
+
+        <!-- Header -->
+        <div style="background:#1e293b;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #334155">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:8px;height:8px;border-radius:50%;background:#ef4444"></div>
+            <span style="color:#e2e8f0;font-weight:600;font-size:14px">整句分析</span>
+          </div>
+          <button style="background:transparent;border:none;color:#64748b;font-size:18px">✕</button>
+        </div>
+
+        <!-- Original sentence -->
+        <div style="padding:14px 16px;border-bottom:1px solid #1e293b">
+          <div style="font-size:11px;color:#64748b;margin-bottom:4px">📝 原句</div>
+          <div style="font-size:15px;color:#e2e8f0;line-height:1.6">
+            I gotta get out of here before sundown.
+          </div>
+        </div>
+
+        <!-- Translation -->
+        <div style="padding:14px 16px;border-bottom:1px solid #1e293b">
+          <div style="font-size:11px;color:#64748b;margin-bottom:4px">🇨🇳 翻译</div>
+          <div style="font-size:14px;color:#cbd5e1;line-height:1.6">
+            我得在日落之前离开这里。
+          </div>
+        </div>
+
+        <!-- Breakdown -->
+        <div style="padding:14px 16px;border-bottom:1px solid #1e293b">
+          <div style="font-size:11px;color:#64748b;margin-bottom:8px">🔍 逐词拆解</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            <span style="background:#1e293b;border-radius:6px;padding:6px 10px;font-size:12px;color:#cbd5e1">I <span style="color:#64748b;font-size:10px">我</span></span>
+            <span style="background:#1e293b;border-radius:6px;padding:6px 10px;font-size:12px;color:#fbbf24">gotta <span style="color:#64748b;font-size:10px">必须 (=got to)</span></span>
+            <span style="background:#1e293b;border-radius:6px;padding:6px 10px;font-size:12px;color:#cbd5e1">get out <span style="color:#64748b;font-size:10px">离开</span></span>
+            <span style="background:#1e293b;border-radius:6px;padding:6px 10px;font-size:12px;color:#cbd5e1">of <span style="color:#64748b;font-size:10px">从...</span></span>
+            <span style="background:#1e293b;border-radius:6px;padding:6px 10px;font-size:12px;color:#cbd5e1">here <span style="color:#64748b;font-size:10px">这里</span></span>
+            <span style="background:#1e293b;border-radius:6px;padding:6px 10px;font-size:12px;color:#cbd5e1">before <span style="color:#64748b;font-size:10px">...之前</span></span>
+            <span style="background:#1e293b;border-radius:6px;padding:6px 10px;font-size:12px;color:#fbbf24">sundown <span style="color:#64748b;font-size:10px">日落</span></span>
+          </div>
+        </div>
+
+        <!-- Grammar -->
+        <div style="padding:14px 16px;border-bottom:1px solid #1e293b">
+          <div style="font-size:11px;color:#64748b;margin-bottom:4px">📐 语法分析</div>
+          <div style="font-size:13px;color:#94a3b8;line-height:1.6">
+            <span style="color:#60a5fa">I</span>
+            <span style="color:#64748b">[主语]</span>
+            <span style="color:#f59e0b">gotta get out of here</span>
+            <span style="color:#64748b">[谓语，口语表达]</span>
+            <span style="color:#10b981">before sundown</span>
+            <span style="color:#64748b">[时间状语]</span>
+          </div>
+          <div style="margin-top:8px;background:#1e293b;border-radius:6px;padding:10px">
+            <span style="font-size:11px;color:#64748b">💡 </span>
+            <span style="font-size:12px;color:#94a3b8">"gotta" 是口语化表达 = "have got to"。这是非正式英语，常见于日常对话和电影台词。</span>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div style="padding:14px 16px;display:flex;gap:8px">
+          <button style="flex:1;background:#2563eb;border:none;border-radius:8px;padding:10px;color:white;font-size:13px;font-weight:600">📚 收藏整句</button>
+          <button style="flex:1;background:#334155;border:none;border-radius:8px;padding:10px;color:#cbd5e1;font-size:13px">💬 追问 llama</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>两种解释面板的对比</h3>
+  <div class="split">
+    <div class="mockup">
+      <div class="mockup-header">🔤 点击单词</div>
+      <div class="mockup-body" style="padding:12px">
+        <ul style="color:#94a3b8;font-size:13px;line-height:1.8;padding-left:16px;margin:0">
+          <li>单词释义（多义项）</li>
+          <li>音标 + 发音</li>
+          <li>例句</li>
+          <li>加入生词本</li>
+          <li>问 llama</li>
+        </ul>
+      </div>
+    </div>
+    <div class="mockup">
+      <div class="mockup-header">🔴 点击红点</div>
+      <div class="mockup-body" style="padding:12px">
+        <ul style="color:#94a3b8;font-size:13px;line-height:1.8;padding-left:16px;margin:0">
+          <li>完整翻译</li>
+          <li>逐词拆解</li>
+          <li>语法分析</li>
+          <li>口语/习语提示</li>
+          <li>收藏整句 + 追问</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,186 @@
+<h2>悬浮窗 UI 设计</h2>
+<p class="subtitle">底部半透明横条 + 点击交互 + llama 对话面板</p>
+
+<div class="section">
+  <h3>播放中：底部字幕条（默认状态）</h3>
+  <div class="mockup">
+    <div class="mockup-header">屏幕布局 — 电影播放中</div>
+    <div class="mockup-body">
+
+      <!-- Phone mockup -->
+      <div style="max-width:375px;margin:0 auto;background:#0f172a;border-radius:20px;overflow:hidden;border:3px solid #334155">
+
+        <!-- Video area -->
+        <div style="height:280px;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);display:flex;align-items:center;justify-content:center;position:relative">
+          <div style="color:#64748b;font-size:14px">🎥 电影画面</div>
+
+          <!-- Subtle indicator: where OCR reads -->
+          <div style="position:absolute;bottom:60px;left:10%;right:10%;border:1px dashed rgba(96,165,250,0.4);border-radius:4px;padding:6px;text-align:center">
+            <span style="color:rgba(96,165,250,0.5);font-size:11px">OCR 识别区域</span>
+          </div>
+        </div>
+
+        <!-- Subtitle bar -->
+        <div style="background:rgba(15,23,42,0.85);backdrop-filter:blur(10px);padding:12px 16px;border-top:1px solid rgba(148,163,184,0.2)">
+
+          <!-- Current subtitle -->
+          <div style="margin-bottom:8px">
+            <div style="display:flex;align-items:flex-start;gap:8px">
+              <!-- Red dot for sentence -->
+              <div style="width:10px;height:10px;border-radius:50%;background:#ef4444;flex-shrink:0;margin-top:4px"></div>
+              <div>
+                <span style="color:#e2e8f0;font-size:15px;line-height:1.5">
+                  I <span style="color:#fbbf24;border-bottom:1px dashed #fbbf24;cursor:pointer">gotta</span> get out of here before
+                  <span style="color:#fbbf24;border-bottom:1px dashed #fbbf24;cursor:pointer">sundown</span>
+                </span>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;margin-top:4px">
+              <span style="font-size:10px;color:#64748b">00:32:15</span>
+            </div>
+          </div>
+
+          <!-- Controls hint -->
+          <div style="display:flex;justify-content:center;gap:24px">
+            <span style="font-size:10px;color:#475569">💬 上滑展开对话</span>
+            <span style="font-size:10px;color:#475569">✕ 右滑隐藏</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>交互行为说明</h3>
+
+  <div style="display:flex;gap:16px;flex-wrap:wrap">
+    <div style="flex:1;min-width:200px;background:#1e293b;border-radius:10px;padding:16px">
+      <div style="color:#fbbf24;font-weight:600;font-size:16px;margin-bottom:8px">🔤 点击单词</div>
+      <p style="color:#94a3b8;font-size:13px;line-height:1.6">
+        弹出单词解释气泡：<br>
+        • 音标 + 发音<br>
+        • 中文释义<br>
+        • 例句<br>
+        • 加入生词本
+      </p>
+    </div>
+
+    <div style="flex:1;min-width:200px;background:#1e293b;border-radius:10px;padding:16px">
+      <div style="color:#ef4444;font-weight:600;font-size:16px;margin-bottom:8px">🔴 点击红点</div>
+      <p style="color:#94a3b8;font-size:13px;line-height:1.6">
+        弹出整句解释面板：<br>
+        • 完整翻译<br>
+        • 语法分析<br>
+        • 逐词breakdown<br>
+        • 常见搭配
+      </p>
+    </div>
+
+    <div style="flex:1;min-width:200px;background:#1e293b;border-radius:10px;padding:16px">
+      <div style="color:#60a5fa;font-weight:600;font-size:16px;margin-bottom:8px">💬 上滑展开</div>
+      <p style="color:#94a3b8;font-size:13px;line-height:1.6">
+        打开 llama 对话面板：<br>
+        • 自由输入问题<br>
+        • 上下文感知（当前字幕）<br>
+        • 对话历史<br>
+        • 可语音输入
+      </p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>单词解释弹窗</h3>
+  <div class="mockup">
+    <div class="mockup-header">点击单词 "sundown" 后的弹窗</div>
+    <div class="mockup-body">
+      <div style="max-width:340px;margin:0 auto;background:#1e293b;border-radius:12px;padding:20px;border:1px solid #334155">
+        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px">
+          <div>
+            <span style="font-size:20px;font-weight:700;color:#e2e8f0">sundown</span>
+            <span style="color:#64748b;font-size:13px;margin-left:8px">/ˈsʌn.daʊn/</span>
+          </div>
+          <button style="background:transparent;border:none;color:#64748b;font-size:18px;cursor:pointer">✕</button>
+        </div>
+        <div style="color:#94a3b8;font-size:13px;line-height:1.6;margin-bottom:12px">
+          <strong style="color:#cbd5e1">n.</strong> 日落，黄昏<br>
+          <strong style="color:#cbd5e1">v.</strong> （非正式）在日落时结束工作
+        </div>
+        <div style="background:#0f172a;border-radius:8px;padding:10px;margin-bottom:12px">
+          <span style="color:#64748b;font-size:11px">📝 例句：</span>
+          <span style="color:#94a3b8;font-size:12px">"We need to finish before sundown."</span>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button style="flex:1;background:#2563eb;border:none;border-radius:6px;padding:8px;color:white;font-size:12px;font-weight:600">+ 加入生词本</button>
+          <button style="flex:1;background:#334155;border:none;border-radius:6px;padding:8px;color:#cbd5e1;font-size:12px">💬 问 llama</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>llama 对话面板</h3>
+  <div class="mockup">
+    <div class="mockup-header">上滑展开后 — 占据屏幕下半部分</div>
+    <div class="mockup-body">
+      <div style="max-width:375px;margin:0 auto;background:#0f172a;border-radius:16px;overflow:hidden;border:1px solid #334155">
+
+        <!-- Context badge -->
+        <div style="padding:12px 16px;background:#1e293b;border-bottom:1px solid #334155">
+          <div style="font-size:11px;color:#64748b;margin-bottom:4px">📌 当前字幕上下文</div>
+          <div style="font-size:12px;color:#94a3b8">"I gotta get out of here before sundown"</div>
+        </div>
+
+        <!-- Chat messages -->
+        <div style="padding:16px;min-height:180px;display:flex;flex-direction:column;gap:12px">
+
+          <div style="display:flex;gap:8px;justify-content:flex-end">
+            <div style="background:#2563eb;border-radius:10px 10px 2px 10px;padding:10px 14px;max-width:80%">
+              <span style="color:#e2e8f0;font-size:13px">"gotta" 是什么意思？</span>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px">
+            <div style="width:24px;height:24px;border-radius:50%;background:#7c3aed;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <span style="font-size:10px;color:white">🦙</span>
+            </div>
+            <div style="background:#1e293b;border-radius:10px 10px 10px 2px;padding:10px 14px;max-width:80%">
+              <span style="color:#cbd5e1;font-size:13px;line-height:1.5">"gotta" 是 "got to" 的口语缩写，表示"必须、得"。<br><br>例如：I gotta go = 我得走了<br><br>这是非正式口语，书面语中建议用 "have to" 或 "must"。</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Input area -->
+        <div style="padding:12px 16px;border-top:1px solid #334155;display:flex;gap:8px;align-items:center">
+          <input placeholder="输入问题..." style="flex:1;background:#1e293b;border:1px solid #334155;border-radius:20px;padding:8px 16px;color:#e2e8f0;font-size:13px;outline:none" class="mock-input">
+          <button style="background:#2563eb;border:none;border-radius:50%;width:36px;height:36px;color:white;font-size:16px;display:flex;align-items:center;justify-content:center">➤</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>难词自动标记示意</h3>
+  <p style="color:#94a3b8;font-size:13px">
+    预处理后，字幕中的难词用 <span style="color:#fbbf24;border-bottom:1px dashed #fbbf24">黄色下划线</span> 标记。
+    新用户看到的难词较多；随着查词历史积累，系统逐步学习用户词汇量，标记的难词越来越精准。
+  </p>
+  <div style="background:#1e293b;border-radius:8px;padding:12px;margin-top:12px">
+    <span style="color:#e2e8f0;font-size:14px;line-height:1.8">
+      I <span style="color:#fbbf24;border-bottom:1px dashed #fbbf24">gotta</span> get out of here
+      before <span style="color:#fbbf24;border-bottom:1px dashed #fbbf24">sundown</span>, the
+      <span style="color:#60a5fa;border-bottom:1px solid #60a5fa">sheriff</span> is coming and I
+      ain't got no <span style="color:#fbbf24;border-bottom:1px dashed #fbbf24">alibi</span>.
+    </span>
+    <div style="display:flex;gap:16px;margin-top:10px;font-size:11px">
+      <span style="color:#fbbf24">🟡 难词（生词）</span>
+      <span style="color:#60a5fa">🔵 已掌握（之前查过）</span>
+    </div>
+  </div>
+</div>

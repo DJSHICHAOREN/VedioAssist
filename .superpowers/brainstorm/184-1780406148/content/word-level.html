@@ -1,0 +1,123 @@
+<h2>生词等级调节机制</h2>
+<p class="subtitle">点击 = 快速升高（确认生疏） &nbsp;|&nbsp; 忽略 = 缓慢降低（可能已掌握）</p>
+
+<div class="section">
+  <h3>等级升降曲线</h3>
+  <div class="mockup">
+    <div class="mockup-header">同一单词在不同行为下的等级变化</div>
+    <div class="mockup-body">
+
+      <div style="background:#0f172a;border-radius:12px;padding:24px">
+
+        <!-- Legend -->
+        <div style="display:flex;gap:24px;margin-bottom:20px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <div style="width:12px;height:12px;border-radius:3px;background:#ef4444"></div>
+            <span style="font-size:12px;color:#cbd5e1">点击行为（升高）</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <div style="width:12px;height:12px;border-radius:3px;background:#3b82f6"></div>
+            <span style="font-size:12px;color:#cbd5e1">不点击（降低）</span>
+          </div>
+        </div>
+
+        <!-- Level bars visualization -->
+        <div style="margin-bottom:20px">
+          <div style="font-size:11px;color:#64748b;margin-bottom:8px">第 1 次出现（llama 标记为 3 级）</div>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+            <span style="font-size:10px;color:#64748b;width:24px">L3</span>
+            <div style="flex:1;background:#1e293b;border-radius:4px;height:20px;overflow:hidden">
+              <div style="background:#fbbf24;width:60%;height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px">
+                <span style="font-size:9px;color:#0f172a;font-weight:600">3</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:20px">
+          <div style="font-size:11px;color:#64748b;margin-bottom:8px">第 2 次出现 — 用户点击 👆</div>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+            <span style="font-size:10px;color:#ef4444;width:24px">L5</span>
+            <div style="flex:1;background:#1e293b;border-radius:4px;height:20px;overflow:hidden">
+              <div style="background:#ef4444;width:90%;height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px">
+                <span style="font-size:9px;color:white;font-weight:600">5 ↑↑</span>
+              </div>
+            </div>
+          </div>
+          <span style="font-size:10px;color:#f87171">点击一次 = 立即跳到最高级（快速确认）</span>
+        </div>
+
+        <div style="margin-bottom:20px">
+          <div style="font-size:11px;color:#64748b;margin-bottom:8px">第 1 次出现 · 不点击</div>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+            <span style="font-size:10px;color:#64748b;width:24px">L2</span>
+            <div style="flex:1;background:#1e293b;border-radius:4px;height:20px;overflow:hidden">
+              <div style="background:#3b82f6;width:45%;height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px">
+                <span style="font-size:9px;color:white;font-weight:600">2.5 ↓</span>
+              </div>
+            </div>
+          </div>
+          <span style="font-size:10px;color:#60a5fa">忽略一次 = 降 0.5 级（缓慢遗忘）</span>
+        </div>
+
+        <div style="margin-bottom:20px">
+          <div style="font-size:11px;color:#64748b;margin-bottom:8px">第 3 次出现 · 仍不点击</div>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+            <span style="font-size:10px;color:#64748b;width:24px">L2</span>
+            <div style="flex:1;background:#1e293b;border-radius:4px;height:20px;overflow:hidden">
+              <div style="background:#3b82f6;width:35%;height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px">
+                <span style="font-size:9px;color:white;font-weight:600">2 ↓</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:11px;color:#64748b;margin-bottom:8px">第 6 次出现 · 从未点击 → 不再标记为生词</div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <span style="font-size:10px;color:#34d399;width:24px">L0</span>
+            <div style="flex:1;background:#1e293b;border-radius:4px;height:20px;overflow:hidden">
+              <div style="background:#34d399;width:10%;height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px">
+                <span style="font-size:9px;color:#0f172a;font-weight:600">已掌握</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>调节规则总结</h3>
+  <div class="split">
+    <div style="background:#1e293b;border-radius:10px;padding:16px;border-left:3px solid #ef4444">
+      <div style="font-weight:600;color:#ef4444;margin-bottom:8px">👆 用户点击</div>
+      <ul style="color:#94a3b8;font-size:12px;line-height:1.8;padding-left:16px;margin:0">
+        <li>等级 <strong style="color:#f87171">立即跳到最高级</strong></li>
+        <li>进入"重点关注"词库</li>
+        <li>后续优先标记展示</li>
+        <li>同时记录上下文（在哪部电影的哪句话）</li>
+      </ul>
+    </div>
+    <div style="background:#1e293b;border-radius:10px;padding:16px;border-left:3px solid #3b82f6">
+      <div style="font-weight:600;color:#3b82f6;margin-bottom:8px">🙈 展示但未点击</div>
+      <ul style="color:#94a3b8;font-size:12px;line-height:1.8;padding-left:16px;margin:0">
+        <li>每次 <strong style="color:#60a5fa">降 0.5 级</strong></li>
+        <li>需连续忽略 6 次才归零</li>
+        <li>防止"偶然没注意"导致的误判</li>
+        <li>归零后 = 标记为"已掌握"</li>
+      </ul>
+    </div>
+  </div>
+
+  <div style="background:#1e293b;border-radius:10px;padding:16px;margin-top:16px">
+    <div style="font-weight:600;color:#fbbf24;margin-bottom:8px">⚡ 特殊情况</div>
+    <ul style="color:#94a3b8;font-size:12px;line-height:1.8;padding-left:16px;margin:0">
+      <li>用户主动"加入生词本" → 立即锁定为最高级，不再自动降级</li>
+      <li>用户标记"已掌握" → 立即归零</li>
+      <li>llama 标记的初始等级作为起点（常见词 1-2 级，难词 3-4 级，习语 5 级）</li>
+    </ul>
+  </div>
+</div>

@@ -1,0 +1,129 @@
+<h2>系统整体架构</h2>
+<p class="subtitle">三个独立 App + 模型训练管线 + 数据集工具链</p>
+
+<div class="section">
+  <h3>Android 设备上的组件</h3>
+  <div class="mockup">
+    <div class="mockup-header">设备侧架构</div>
+    <div class="mockup-body">
+
+      <div style="background:#1e293b;border-radius:12px;padding:24px;margin-bottom:16px">
+        <div style="font-size:16px;font-weight:700;color:#60a5fa;margin-bottom:16px">主 App：电影英语助手</div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+
+          <div style="flex:1;min-width:180px;background:#0f172a;border-radius:8px;padding:14px">
+            <div style="font-weight:600;color:#c4b5fd;margin-bottom:8px">🎬 悬浮窗层</div>
+            <div style="font-size:13px;color:#94a3b8;line-height:1.6">
+              MediaProjection 录屏<br>
+              底部半透明字幕条<br>
+              单词/句子点击交互<br>
+              llama 对话面板
+            </div>
+          </div>
+
+          <div style="flex:1;min-width:180px;background:#0f172a;border-radius:8px;padding:14px">
+            <div style="font-weight:600;color:#c4b5fd;margin-bottom:8px">📖 字幕处理引擎</div>
+            <div style="font-size:13px;color:#94a3b8;line-height:1.6">
+              SRT/ASS/VTT/SUB 解析<br>
+              字幕时间轴匹配<br>
+              预处理难词分析<br>
+              用户词库管理
+            </div>
+          </div>
+
+          <div style="flex:1;min-width:180px;background:#0f172a;border-radius:8px;padding:14px">
+            <div style="font-weight:600;color:#c4b5fd;margin-bottom:8px">🧠 本地模型推理</div>
+            <div style="font-size:13px;color:#94a3b8;line-height:1.6">
+              自训练 OCR 模型<br>
+              Qwen 2.5 1.5B (llama)<br>
+              模型蒸馏/剪枝/量化<br>
+              预处理批量推理
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div style="background:#1e293b;border-radius:12px;padding:24px">
+        <div style="font-size:16px;font-weight:700;color:#f59e0b;margin-bottom:16px">独立 App：数据标注工具</div>
+        <div style="display:flex;gap:16px">
+          <div style="flex:1;background:#0f172a;border-radius:8px;padding:14px">
+            <div style="font-weight:600;color:#fbbf24;margin-bottom:8px">✏️ 标注功能</div>
+            <div style="font-size:13px;color:#94a3b8;line-height:1.6">
+              字幕区域框选<br>
+              文本转录标注<br>
+              多字体/样式覆盖<br>
+              导出训练数据集
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>PC/服务器侧：训练管线</h3>
+  <div class="mockup">
+    <div class="mockup-header">训练 + 优化管线 (GPU服务器)</div>
+    <div class="mockup-body">
+
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;padding:20px 0">
+        <div style="background:#0f172a;border-radius:8px;padding:12px 16px;text-align:center">
+          <div style="font-weight:600;color:#a78bfa">📊 数据集</div>
+          <div style="font-size:12px;color:#94a3b8">标注数据导出</div>
+        </div>
+        <div style="color:#475569;font-size:20px">→</div>
+        <div style="background:#0f172a;border-radius:8px;padding:12px 16px;text-align:center">
+          <div style="font-weight:600;color:#a78bfa">🏋️ 训练</div>
+          <div style="font-size:12px;color:#94a3b8">OCR 模型训练</div>
+        </div>
+        <div style="color:#475569;font-size:20px">→</div>
+        <div style="background:#0f172a;border-radius:8px;padding:12px 16px;text-align:center">
+          <div style="font-weight:600;color:#a78bfa">✂️ 优化</div>
+          <div style="font-size:12px;color:#94a3b8">蒸馏/剪枝/量化</div>
+        </div>
+        <div style="color:#475569;font-size:20px">→</div>
+        <div style="background:#0f172a;border-radius:8px;padding:12px 16px;text-align:center">
+          <div style="font-weight:600;color:#a78bfa">📱 部署</div>
+          <div style="font-size:12px;color:#94a3b8">TFLite/ONNX<br>打包进 APK</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>数据流图</h3>
+  <div class="mockup">
+    <div class="mockup-header">运行时数据流</div>
+    <div class="mockup-body">
+
+      <div style="display:flex;flex-direction:column;gap:12px;padding:16px">
+        <div style="display:flex;gap:12px;align-items:center">
+          <div style="background:#1e40af;border-radius:6px;padding:8px 14px;font-size:13px;color:#dbeafe;min-width:140px;text-align:center">📱 屏幕画面</div>
+          <span style="color:#475569">→</span>
+          <div style="background:#065f46;border-radius:6px;padding:8px 14px;font-size:13px;color:#d1fae5;min-width:140px;text-align:center">OCR 识别</div>
+          <span style="color:#475569">→</span>
+          <div style="background:#5b21b6;border-radius:6px;padding:8px 14px;font-size:13px;color:#ede9fe;min-width:140px;text-align:center">字幕文本</div>
+          <span style="color:#475569">→</span>
+          <div style="background:#92400e;border-radius:6px;padding:8px 14px;font-size:13px;color:#fef3c7;min-width:140px;text-align:center">匹配定位 → 难词标记</div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center">
+          <div style="background:#92400e;border-radius:6px;padding:8px 14px;font-size:13px;color:#fef3c7;min-width:140px;text-align:center">👆 用户点击</div>
+          <span style="color:#475569">→</span>
+          <div style="background:#881337;border-radius:6px;padding:8px 14px;font-size:13px;color:#fce7f3;min-width:140px;text-align:center">llama 推理</div>
+          <span style="color:#475569">→</span>
+          <div style="background:#166534;border-radius:6px;padding:8px 14px;font-size:13px;color:#dcfce7;min-width:140px;text-align:center">解释弹窗</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:32px">
+  <p style="color:#94a3b8;font-size:14px">核心设计要点：OCR 和 llama 都在本地推理，无网络依赖；悬浮窗通过 MediaProjection 获取屏幕帧 + 局部 OCR 识别字幕区域。</p>
+</div>

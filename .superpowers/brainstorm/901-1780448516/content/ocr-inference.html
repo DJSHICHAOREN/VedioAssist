@@ -1,0 +1,206 @@
+<h2>OCR 推理架构</h2>
+<p class="subtitle">CRNN 模型在 Android 上的推理方案</p>
+
+<div class="section">
+  <h3>推理引擎对比</h3>
+  <div style="display:flex;gap:12px;flex-wrap:wrap">
+    <div style="flex:1;min-width:200px;background:#0f172a;border-radius:8px;padding:14px;border:1px solid #334155">
+      <div style="font-weight:600;color:#f59e0b;margin-bottom:6px">TFLite</div>
+      <ul style="color:#94a3b8;font-size:12px;line-height:1.7;padding-left:16px;margin:0">
+        <li>Google 官方，Android 原生支持</li>
+        <li>可调用 GPU (OpenGL ES) / NNAPI</li>
+        <li>INT8 量化模型直接加载</li>
+        <li>轻量级，无额外依赖</li>
+      </ul>
+    </div>
+    <div style="flex:1;min-width:200px;background:#0f172a;border-radius:8px;padding:14px;border:1px solid #334155">
+      <div style="font-weight:600;color:#60a5fa;margin-bottom:6px">ONNX Runtime</div>
+      <ul style="color:#94a3b8;font-size:12px;line-height:1.7;padding-left:16px;margin:0">
+        <li>跨平台，PyTorch 模型直接导出</li>
+        <li>CPU / GPU / NNAPI 多后端</li>
+        <li>支持 FP16 和 INT8</li>
+        <li>推理性能与 TFLite 接近</li>
+      </ul>
+    </div>
+    <div style="flex:1;min-width:200px;background:#0f172a;border-radius:8px;padding:14px;border:1px solid #334155">
+      <div style="font-weight:600;color:#34d399;margin-bottom:6px">NCNN</div>
+      <ul style="color:#94a3b8;font-size:12px;line-height:1.7;padding-left:16px;margin:0">
+        <li>腾讯开源，专为移动端优化</li>
+        <li>ARM NEON 手写汇编加速</li>
+        <li>体积极小，无系统依赖</li>
+        <li>Vulkan GPU 加速</li>
+      </ul>
+    </div>
+  </div>
+  <div style="background:#1e293b;border-radius:8px;padding:12px;margin-top:12px;border-left:3px solid #f59e0b">
+    <span style="color:#f59e0b;font-weight:600;font-size:13px">推荐：TFLite</span>
+    <span style="color:#94a3b8;font-size:12px"> — Android 原生集成，无需额外 .so，INT8 量化支持最好，Google 长期维护。</span>
+  </div>
+</div>
+
+<div class="section">
+  <h3>OCR 推理流程</h3>
+  <div class="mockup">
+    <div class="mockup-header">从屏幕帧到识别的完整流程</div>
+    <div class="mockup-body">
+
+      <div style="display:flex;flex-direction:column;gap:12px;padding:8px">
+
+        <div style="display:flex;gap:12px;align-items:stretch">
+          <div style="width:36px;height:36px;border-radius:50%;background:#2563eb;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <span style="color:white;font-size:14px;font-weight:700">1</span>
+          </div>
+          <div style="flex:1;background:#1e293b;border-radius:8px;padding:14px">
+            <div style="font-weight:600;color:#e2e8f0;margin-bottom:4px">屏幕帧获取</div>
+            <div style="font-size:12px;color:#94a3b8;line-height:1.5">
+              MediaProjection 回调 → ImageReader 获取 YUV 帧 → 转 RGB Bitmap<br>
+              采样频率：~2-3 FPS（字幕变化不会很快，无需实时帧率）
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;align-items:stretch">
+          <div style="width:36px;height:36px;border-radius:50%;background:#2563eb;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <span style="color:white;font-size:14px;font-weight:700">2</span>
+          </div>
+          <div style="flex:1;background:#1e293b;border-radius:8px;padding:14px">
+            <div style="font-weight:600;color:#e2e8f0;margin-bottom:4px">字幕区域裁剪</div>
+            <div style="font-size:12px;color:#94a3b8;line-height:1.5">
+              固定裁剪屏幕底部 1/5 区域（字幕通常在此位置）<br>
+              可选：先跑一个轻量检测模型定位精确字幕框（初始版本可省略）
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;align-items:stretch">
+          <div style="width:36px;height:36px;border-radius:50%;background:#2563eb;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <span style="color:white;font-size:14px;font-weight:700">3</span>
+          </div>
+          <div style="flex:1;background:#1e293b;border-radius:8px;padding:14px">
+            <div style="font-weight:600;color:#e2e8f0;margin-bottom:4px">预处理</div>
+            <div style="font-size:12px;color:#94a3b8;line-height:1.5">
+              灰度化 → 缩放至固定高度（32px，保持宽高比）→ 归一化 [0,1] → 转为模型输入 tensor (H×W×1)
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;align-items:stretch">
+          <div style="width:36px;height:36px;border-radius:50%;background:#7c3aed;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <span style="color:white;font-size:14px;font-weight:700">4</span>
+          </div>
+          <div style="flex:1;background:#1e293b;border-radius:8px;padding:14px;border:1px solid rgba(124,58,237,0.3)">
+            <div style="font-weight:600;color:#c4b5fd;margin-bottom:4px">TFLite 推理</div>
+            <div style="font-size:12px;color:#94a3b8;line-height:1.5">
+              Interpreter.run() → CNN 提取特征 → LSTM 序列建模 → CTC 解码<br>
+              输出：字符序列 + 置信度<br>
+              预期耗时：30-80ms（GPU）/ 50-150ms（CPU）
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;align-items:stretch">
+          <div style="width:36px;height:36px;border-radius:50%;background:#2563eb;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <span style="color:white;font-size:14px;font-weight:700">5</span>
+          </div>
+          <div style="flex:1;background:#1e293b;border-radius:8px;padding:14px">
+            <div style="font-weight:600;color:#e2e8f0;margin-bottom:4px">后处理 & 去重</div>
+            <div style="font-size:12px;color:#94a3b8;line-height:1.5">
+              CTC 贪婪解码 → 去除重复字符和 blank token → 拼写纠错 →<br>
+              与上一帧结果比对，相同则跳过（减少字幕匹配开销）
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;align-items:stretch">
+          <div style="width:36px;height:36px;border-radius:50%;background:#059669;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <span style="color:white;font-size:14px;font-weight:700">✓</span>
+          </div>
+          <div style="flex:1;background:#059669;border-radius:8px;padding:14px">
+            <div style="font-weight:600;color:#d1fae5;margin-bottom:4px">输出：识别文本</div>
+            <div style="font-size:12px;color:#d1fae5;line-height:1.5">
+              "I gotta get out of here before sundown" → 送入字幕匹配模块
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>OCR 采样策略</h3>
+  <div class="mockup">
+    <div class="mockup-header">降低功耗和计算开销</div>
+    <div class="mockup-body">
+      <div class="split">
+        <div style="background:#0f172a;border-radius:8px;padding:14px">
+          <div style="font-weight:600;color:#60a5fa;margin-bottom:8px">🎯 自适应采样</div>
+          <ul style="color:#94a3b8;font-size:12px;line-height:1.7;padding-left:16px;margin:0">
+            <li>字幕未变化时：每 1 秒采样一次</li>
+            <li>检测到变化时：提高到每 0.3 秒</li>
+            <li>连续 5 帧相同 → 回到慢采样</li>
+          </ul>
+        </div>
+        <div style="background:#0f172a;border-radius:8px;padding:14px">
+          <div style="font-weight:600;color:#34d399;margin-bottom:8px">🔋 省电策略</div>
+          <ul style="color:#94a3b8;font-size:12px;line-height:1.7;padding-left:16px;margin:0">
+            <li>有字幕文件匹配时：OCR 仅用于校准</li>
+            <li>无字幕文件时：正常频率 OCR</li>
+            <li>用户暂停视频：停止 OCR</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>OCR 与 llama 推理架构总览</h3>
+  <div class="mockup">
+    <div class="mockup-body">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="border-bottom:1px solid #334155">
+            <th style="padding:8px 12px;text-align:left;color:#64748b"></th>
+            <th style="padding:8px 12px;text-align:center;color:#64748b">OCR</th>
+            <th style="padding:8px 12px;text-align:center;color:#64748b">llama</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #1e293b">
+            <td style="padding:10px 12px;color:#94a3b8">引擎</td>
+            <td style="padding:10px 12px;text-align:center;color:#cbd5e1">TFLite</td>
+            <td style="padding:10px 12px;text-align:center;color:#cbd5e1">llama.cpp (JNI)</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1e293b">
+            <td style="padding:10px 12px;color:#94a3b8">模型格式</td>
+            <td style="padding:10px 12px;text-align:center;color:#cbd5e1">.tflite (INT8)</td>
+            <td style="padding:10px 12px;text-align:center;color:#cbd5e1">.gguf (Q4_K_M)</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1e293b">
+            <td style="padding:10px 12px;color:#94a3b8">体积</td>
+            <td style="padding:10px 12px;text-align:center;color:#cbd5e1">~3MB</td>
+            <td style="padding:10px 12px;text-align:center;color:#cbd5e1">~1.2GB</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1e293b">
+            <td style="padding:10px 12px;color:#94a3b8">推理耗时</td>
+            <td style="padding:10px 12px;text-align:center;color:#cbd5e1">30-80ms</td>
+            <td style="padding:10px 12px;text-align:center;color:#cbd5e1">10-20 token/s</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1e293b">
+            <td style="padding:10px 12px;color:#94a3b8">内存占用</td>
+            <td style="padding:10px 12px;text-align:center;color:#cbd5e1">~50MB</td>
+            <td style="padding:10px 12px;text-align:center;color:#cbd5e1">~1.5-3GB</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 12px;color:#94a3b8">调用方式</td>
+            <td style="padding:10px 12px;text-align:center;color:#cbd5e1">Java/Kotlin API</td>
+            <td style="padding:10px 12px;text-align:center;color:#cbd5e1">JNI C++ 调用</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,179 @@
+<h2>字幕处理管线</h2>
+<p class="subtitle">导入字幕 → 解析 → llama 预处理 → 缓存 → 运行时匹配</p>
+
+<div class="section">
+  <h3>整体处理流程</h3>
+  <div class="mockup">
+    <div class="mockup-body">
+      <div style="display:flex;flex-direction:column;gap:16px;padding:16px">
+
+        <!-- Step 1: Import -->
+        <div style="display:flex;gap:12px;align-items:stretch">
+          <div style="width:32px;height:32px;border-radius:50%;background:#2563eb;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <span style="color:white;font-size:14px;font-weight:700">1</span>
+          </div>
+          <div style="flex:1;background:#1e293b;border-radius:8px;padding:14px">
+            <div style="font-weight:600;color:#e2e8f0;margin-bottom:4px">导入 & 解析</div>
+            <div style="font-size:12px;color:#94a3b8;line-height:1.5">
+              支持 SRT / ASS / VTT / SUB 格式，自动检测编码（UTF-8 / GBK / Latin-1），统一解析为内部结构：<br>
+              <code style="background:#0f172a;padding:2px 6px;border-radius:3px;color:#60a5fa">[索引, 开始时间, 结束时间, 文本]</code>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Normalize -->
+        <div style="display:flex;gap:12px;align-items:stretch">
+          <div style="width:32px;height:32px;border-radius:50%;background:#2563eb;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <span style="color:white;font-size:14px;font-weight:700">2</span>
+          </div>
+          <div style="flex:1;background:#1e293b;border-radius:8px;padding:14px">
+            <div style="font-weight:600;color:#e2e8f0;margin-bottom:4px">文本规范化</div>
+            <div style="font-size:12px;color:#94a3b8;line-height:1.5">
+              去除 ASS 样式标签、HTML 标签 → 统一换行符 → 合并断句 → 去除特效字幕（歌词等）→ 生成干净的纯文本时间轴
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Llama Preprocess -->
+        <div style="display:flex;gap:12px;align-items:stretch">
+          <div style="width:32px;height:32px;border-radius:50%;background:#7c3aed;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <span style="color:white;font-size:14px;font-weight:700">3</span>
+          </div>
+          <div style="flex:1;background:#1e293b;border-radius:8px;padding:14px;border:1px solid rgba(124,58,237,0.3)">
+            <div style="font-weight:600;color:#c4b5fd;margin-bottom:4px">llama 预处理（后台异步）</div>
+            <div style="font-size:12px;color:#94a3b8;line-height:1.5">
+              每句字幕送 llama 批量分析，提取：
+              <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+                <span style="background:#0f172a;border-radius:4px;padding:4px 8px;font-size:11px;color:#fbbf24">难词标记 + 等级</span>
+                <span style="background:#0f172a;border-radius:4px;padding:4px 8px;font-size:11px;color:#60a5fa">词根词缀拆解</span>
+                <span style="background:#0f172a;border-radius:4px;padding:4px 8px;font-size:11px;color:#34d399">习语/俚语识别</span>
+                <span style="background:#0f172a;border-radius:4px;padding:4px 8px;font-size:11px;color:#f472b6">中文释义</span>
+                <span style="background:#0f172a;border-radius:4px;padding:4px 8px;font-size:11px;color:#a78bfa">整句翻译</span>
+                <span style="background:#0f172a;border-radius:4px;padding:4px 8px;font-size:11px;color:#f97316">语法结构</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: User Model -->
+        <div style="display:flex;gap:12px;align-items:stretch">
+          <div style="width:32px;height:32px;border-radius:50%;background:#2563eb;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <span style="color:white;font-size:14px;font-weight:700">4</span>
+          </div>
+          <div style="flex:1;background:#1e293b;border-radius:8px;padding:14px">
+            <div style="font-weight:600;color:#e2e8f0;margin-bottom:4px">用户词库融合</div>
+            <div style="font-size:12px;color:#94a3b8;line-height:1.5">
+              将 llama 标记的难词与用户历史查词记录交叉比对：查过的词 → 降低难度等级，多次跳过的词 → 标记为已掌握，首次出现的词 → 保持 llama 标记等级
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 5: Cache -->
+        <div style="display:flex;gap:12px;align-items:stretch">
+          <div style="width:32px;height:32px;border-radius:50%;background:#059669;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <span style="color:white;font-size:14px;font-weight:700">5</span>
+          </div>
+          <div style="flex:1;background:#1e293b;border-radius:8px;padding:14px">
+            <div style="font-weight:600;color:#e2e8f0;margin-bottom:4px">缓存写入</div>
+            <div style="font-size:12px;color:#94a3b8;line-height:1.5">
+              所有分析结果序列化到本地 SQLite 数据库，按电影/字幕文件组织。后续播放无需重新分析。用户词库独立存储，跨电影共享。
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>预处理进度 UI</h3>
+  <div class="mockup">
+    <div class="mockup-header">用户导入字幕后的进度界面</div>
+    <div class="mockup-body">
+      <div style="max-width:360px;margin:0 auto;background:#0f172a;border-radius:12px;padding:20px;border:1px solid #334155">
+        <div style="text-align:center;margin-bottom:16px">
+          <div style="font-size:16px;font-weight:600;color:#e2e8f0;margin-bottom:4px">🦙 正在分析字幕...</div>
+          <div style="font-size:12px;color:#64748b">The Dark Knight (2008) · 共 2,847 句</div>
+        </div>
+
+        <!-- Progress bar -->
+        <div style="background:#1e293b;border-radius:8px;height:8px;margin-bottom:12px;overflow:hidden">
+          <div style="background:linear-gradient(90deg,#2563eb,#7c3aed);height:100%;width:42%;border-radius:8px"></div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;margin-bottom:16px">
+          <span style="font-size:12px;color:#60a5fa">1,196 / 2,847</span>
+          <span style="font-size:12px;color:#64748b">42% · 剩余约 3 分钟</span>
+        </div>
+
+        <!-- Current processing info -->
+        <div style="background:#1e293b;border-radius:8px;padding:10px;margin-bottom:8px">
+          <div style="font-size:11px;color:#64748b;margin-bottom:2px">正在分析</div>
+          <div style="font-size:12px;color:#94a3b8">"You either die a hero, or you live long enough to see yourself become the villain."</div>
+        </div>
+
+        <div style="text-align:center">
+          <button style="background:transparent;border:1px solid #334155;border-radius:6px;padding:6px 16px;color:#64748b;font-size:12px">后台运行 · 切换到其他界面</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>运行时匹配流程</h3>
+  <div class="mockup">
+    <div class="mockup-body">
+      <div style="display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap;padding:16px">
+        <div style="background:#1e293b;border-radius:6px;padding:8px 14px;font-size:12px;color:#cbd5e1;text-align:center">
+          OCR 输出文本<br><span style="color:#64748b;font-size:10px">"get out of here"</span>
+        </div>
+        <span style="color:#475569">→</span>
+        <div style="background:#1e293b;border-radius:6px;padding:8px 14px;font-size:12px;color:#cbd5e1;text-align:center">
+          模糊匹配<br><span style="color:#64748b;font-size:10px">编辑距离算法</span>
+        </div>
+        <span style="color:#475569">→</span>
+        <div style="background:#1e293b;border-radius:6px;padding:8px 14px;font-size:12px;color:#cbd5e1;text-align:center">
+          定位字幕条目<br><span style="color:#64748b;font-size:10px">#427 · 00:32:15</span>
+        </div>
+        <span style="color:#475569">→</span>
+        <div style="background:#1e293b;border-radius:6px;padding:8px 14px;font-size:12px;color:#cbd5e1;text-align:center">
+          读取缓存<br><span style="color:#64748b;font-size:10px">难词 + 翻译 + 语法</span>
+        </div>
+        <span style="color:#475569">→</span>
+        <div style="background:#059669;border-radius:6px;padding:8px 14px;font-size:12px;color:#d1fae5;text-align:center">
+          更新悬浮窗<br><span style="color:#a7f3d0;font-size:10px">显示带标记的字幕</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>用户词库自适应</h3>
+  <div class="mockup">
+    <div class="mockup-body">
+      <div class="split">
+        <div style="background:#1e293b;border-radius:8px;padding:14px">
+          <div style="font-weight:600;color:#60a5fa;margin-bottom:8px">📊 新用户</div>
+          <p style="font-size:12px;color:#94a3b8;line-height:1.6">
+            依赖 llama 标记的通用难词等级<br>
+            大部分中高级词汇都被标记<br>
+            用户通过查词行为"训练"系统
+          </p>
+        </div>
+        <div style="background:#1e293b;border-radius:8px;padding:14px">
+          <div style="font-weight:600;color:#34d399;margin-bottom:8px">📈 使用 10 部电影后</div>
+          <p style="font-size:12px;color:#94a3b8;line-height:1.6">
+            词库积累了大量用户行为数据<br>
+            查过的词 → 降低等级或标记已学<br>
+            总是跳过的词 → 标记为已掌握<br>
+            只标记真正陌生的词
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

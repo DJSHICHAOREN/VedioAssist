@@ -1,0 +1,213 @@
+<h2>llama 集成 & 模型优化管线</h2>
+<p class="subtitle">Qwen 2.5 1.5B 本地推理 + 蒸馏/剪枝/量化</p>
+
+<div class="section">
+  <h3>llama 推理架构</h3>
+  <div class="mockup">
+    <div class="mockup-header">Qwen 2.5 1.5B 在 Android 上的推理方案</div>
+    <div class="mockup-body">
+
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px;background:#0f172a;border-radius:8px;padding:14px;border:1px solid #334155">
+          <div style="font-weight:600;color:#7c3aed;margin-bottom:8px">🦙 推理引擎</div>
+          <ul style="color:#94a3b8;font-size:12px;line-height:1.7;padding-left:16px;margin:0">
+            <li>llama.cpp (GGUF 格式)</li>
+            <li>通过 JNI 调用 C++ 推理</li>
+            <li>GPU 加速：Vulkan / OpenCL</li>
+            <li>CPU 回退：ARM NEON 优化</li>
+          </ul>
+        </div>
+
+        <div style="flex:1;min-width:200px;background:#0f172a;border-radius:8px;padding:14px;border:1px solid #334155">
+          <div style="font-weight:600;color:#7c3aed;margin-bottom:8px">📊 量化方案</div>
+          <ul style="color:#94a3b8;font-size:12px;line-height:1.7;padding-left:16px;margin:0">
+            <li>Q4_K_M（推荐）：~1.2GB，质量损失小</li>
+            <li>Q3_K_M（备选）：~900MB，轻度损失</li>
+            <li>Q2_K（极限）：~600MB，质量明显下降</li>
+            <li>6GB 内存手机可用 Q4</li>
+          </ul>
+        </div>
+
+        <div style="flex:1;min-width:200px;background:#0f172a;border-radius:8px;padding:14px;border:1px solid #334155">
+          <div style="font-weight:600;color:#7c3aed;margin-bottom:8px">⚡ 性能预期</div>
+          <ul style="color:#94a3b8;font-size:12px;line-height:1.7;padding-left:16px;margin:0">
+            <li>对话推理：10-20 token/s</li>
+            <li>预处理（每句）：0.5-2s</li>
+            <li>整部电影预处理：5-15 分钟</li>
+            <li>内存占用：1.5-3GB</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>两种推理模式</h3>
+  <div class="split">
+    <div style="background:#1e293b;border-radius:10px;padding:16px;border-left:3px solid #f59e0b">
+      <div style="font-weight:600;color:#f59e0b;margin-bottom:8px">🔄 批量预处理</div>
+      <p style="color:#94a3b8;font-size:12px;line-height:1.6">
+        导入字幕时后台批量推理<br>
+        每句送结构化 prompt<br>
+        提取：难词、词根、翻译、语法<br>
+        结果写入 SQLite 缓存<br>
+        支持断点续处理
+      </p>
+      <div style="background:#0f172a;border-radius:6px;padding:10px;margin-top:8px">
+        <code style="font-size:10px;color:#60a5fa;line-height:1.5">
+          Prompt: "分析以下英文句子，输出JSON：<br>
+          {难词:[{词,等级,词根词缀}], 翻译, 语法结构, 习语}"<br>
+          → "We need to finish before sundown."
+        </code>
+      </div>
+    </div>
+    <div style="background:#1e293b;border-radius:10px;padding:16px;border-left:3px solid #60a5fa">
+      <div style="font-weight:600;color:#60a5fa;margin-bottom:8px">💬 对话交互</div>
+      <p style="color:#94a3b8;font-size:12px;line-height:1.6">
+        用户点击或追问时实时推理<br>
+        上下文包含当前字幕<br>
+        流式输出（逐 token 显示）<br>
+        对话历史保留在内存<br>
+        超长对话自动截断
+      </p>
+      <div style="background:#0f172a;border-radius:6px;padding:10px;margin-top:8px">
+        <code style="font-size:10px;color:#60a5fa;line-height:1.5">
+          系统: "你是英语老师，用中文解释"<br>
+          上下文: [当前字幕: "...before sundown."]<br>
+          用户: "sundown是什么意思？"<br>
+          → llama 流式回复
+        </code>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>预处理 Prompt 模板</h3>
+  <div class="mockup">
+    <div class="mockup-header">结构化输出保证解析可靠性</div>
+    <div class="mockup-body">
+      <div style="background:#0f172a;border-radius:8px;padding:16px;font-family:monospace">
+        <pre style="color:#94a3b8;font-size:11px;line-height:1.6;white-space:pre-wrap;margin:0">You are an English teacher helping a Chinese student learn English through movies.
+
+Analyze this subtitle sentence and output ONLY valid JSON, no other text:
+
+Sentence: "{字幕文本}"
+
+Output JSON with these fields:
+{
+  "translation": "整句中文翻译",
+  "grammar": "简短语法分析",
+  "difficult_words": [
+    {
+      "word": "单词",
+      "level": 1-5,
+      "meaning": "中文释义",
+      "morphology": {
+        "prefix": "前缀及含义 (null if none)",
+        "root": "词根及含义",
+        "suffix": "后缀及含义 (null if none)"
+      }
+    }
+  ],
+  "idioms": ["习语/俚语及解释, 没有则为空数组"]
+}</pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>模型优化管线</h3>
+  <p class="subtitle">针对 OCR 模型和 llama 模型的优化流程</p>
+  <div class="mockup">
+    <div class="mockup-header">三阶段优化</div>
+    <div class="mockup-body">
+
+      <div style="display:flex;flex-direction:column;gap:12px;padding:8px">
+
+        <div style="background:#0f172a;border-radius:8px;padding:14px;border-left:3px solid #f59e0b">
+          <div style="font-weight:600;color:#f59e0b;margin-bottom:6px">阶段 1：知识蒸馏（可选，用于 OCR 模型）</div>
+          <div style="font-size:12px;color:#94a3b8;line-height:1.6">
+            用大模型（如 TrOCR-Large）作为 Teacher，训练轻量 Student 模型<br>
+            Student 学习 Teacher 的输出分布（软标签），比直接训练效果更好<br>
+            输出：同架构但参数可更小的学生模型
+          </div>
+          <div style="background:#1e293b;border-radius:4px;padding:6px 10px;margin-top:6px;font-size:11px">
+            <span style="color:#64748b">适用：OCR 模型 &nbsp;|&nbsp; 工具：PyTorch 自定义训练脚本 &nbsp;|&nbsp; 收益：精度提升 2-5%</span>
+          </div>
+        </div>
+
+        <div style="background:#0f172a;border-radius:8px;padding:14px;border-left:3px solid #ef4444">
+          <div style="font-weight:600;color:#ef4444;margin-bottom:6px">阶段 2：结构化剪枝</div>
+          <div style="font-size:12px;color:#94a3b8;line-height:1.6">
+            移除不重要的权重/通道/注意力头<br>
+            <strong>OCR 模型</strong>：通道剪枝，减少 CNN 卷积核数量<br>
+            <strong>llama 模型</strong>：注意力头剪枝 + 层剪枝，移除低重要性层<br>
+            每次剪枝后微调恢复精度
+          </div>
+          <div style="background:#1e293b;border-radius:4px;padding:6px 10px;margin-top:6px;font-size:11px">
+            <span style="color:#64748b">适用：两者 &nbsp;|&nbsp; 工具：torch.pruning / SparseGPT &nbsp;|&nbsp; 收益：体积减少 20-40%</span>
+          </div>
+        </div>
+
+        <div style="background:#0f172a;border-radius:8px;padding:14px;border-left:3px solid #059669">
+          <div style="font-weight:600;color:#34d399;margin-bottom:6px">阶段 3：量化</div>
+          <div style="font-size:12px;color:#94a3b8;line-height:1.6">
+            将 FP32 权重转为低精度整数<br>
+            <strong>OCR 模型</strong>：INT8 全整数量化 → TFLite 格式 → 2-5MB<br>
+            <strong>llama 模型</strong>：Q4_K_M 量化 → GGUF 格式 → ~1.2GB<br>
+            两种模型都需校准数据集保证量化后精度
+          </div>
+          <div style="background:#1e293b;border-radius:4px;padding:6px 10px;margin-top:6px;font-size:11px">
+            <span style="color:#64748b">适用：两者 &nbsp;|&nbsp; 工具：llama.cpp quantize / TFLite Converter &nbsp;|&nbsp; 收益：体积减少 50-75%</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>优化效果对比</h3>
+  <div class="mockup">
+    <div class="mockup-header">OCR 模型和 llama 模型优化前后对比</div>
+    <div class="mockup-body">
+
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="border-bottom:1px solid #334155">
+              <th style="padding:8px 12px;text-align:left;color:#64748b">模型</th>
+              <th style="padding:8px 12px;text-align:center;color:#64748b">原始大小</th>
+              <th style="padding:8px 12px;text-align:center;color:#ef4444">剪枝后</th>
+              <th style="padding:8px 12px;text-align:center;color:#34d399">量化后</th>
+              <th style="padding:8px 12px;text-align:center;color:#64748b">精度损失</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid #1e293b">
+              <td style="padding:10px 12px;color:#cbd5e1;font-weight:600">OCR (CRNN)</td>
+              <td style="padding:10px 12px;text-align:center;color:#cbd5e1">~20MB</td>
+              <td style="padding:10px 12px;text-align:center;color:#f87171">~12MB</td>
+              <td style="padding:10px 12px;text-align:center;color:#4ade80">~3MB</td>
+              <td style="padding:10px 12px;text-align:center;color:#fbbf24">&lt; 2%</td>
+            </tr>
+            <tr style="border-bottom:1px solid #1e293b">
+              <td style="padding:10px 12px;color:#cbd5e1;font-weight:600">llama (1.5B)</td>
+              <td style="padding:10px 12px;text-align:center;color:#cbd5e1">~3GB (FP16)</td>
+              <td style="padding:10px 12px;text-align:center;color:#f87171">~2GB</td>
+              <td style="padding:10px 12px;text-align:center;color:#4ade80">~1.2GB (Q4)</td>
+              <td style="padding:10px 12px;text-align:center;color:#fbbf24">&lt; 5%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
