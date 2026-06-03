@@ -1,10 +1,14 @@
 package com.movieenglish.assistant
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -14,6 +18,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import com.movieenglish.assistant.floating.FloatingWindowService
 
 class MainActivity : ComponentActivity() {
@@ -22,6 +27,15 @@ class MainActivity : ComponentActivity() {
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK && result.data != null) {
                 startFloatingService(result.resultCode, result.data!!)
+            } else {
+                Toast.makeText(this, "需要屏幕录制权限才能捕获字幕", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+    private val overlayPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            if (Settings.canDrawOverlays(this)) {
+                checkNotificationAndStart()
             }
         }
 
@@ -30,28 +44,52 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 MainScreen(
-                    onStartOverlay = { checkOverlayPermission() },
+                    onStartOverlay = { startOverlayFlow() },
                     onImportSubtitle = { /* Task 5 */ }
                 )
             }
         }
     }
 
-    private fun checkOverlayPermission() {
+    private fun startOverlayFlow() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
             val intent = Intent(
                 Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                 Uri.parse("package:$packageName")
             )
-            startActivity(intent)
+            overlayPermissionLauncher.launch(intent)
+        } else {
+            checkNotificationAndStart()
+        }
+    }
+
+    private fun checkNotificationAndStart() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestPermissions(
+                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                REQUEST_NOTIFICATION_PERMISSION
+            )
         } else {
             requestMediaProjection()
         }
     }
 
+    override fun onRequestPermissionsResult(
+        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_NOTIFICATION_PERMISSION) {
+            requestMediaProjection()
+        }
+    }
+
     private fun requestMediaProjection() {
-        val intent = Intent(this, FloatingWindowService::class.java)
-        startForegroundService(intent)
+        val projectionManager = getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+        val intent = projectionManager.createScreenCaptureIntent()
+        mediaProjectionLauncher.launch(intent)
     }
 
     private fun startFloatingService(resultCode: Int, data: Intent) {
@@ -59,7 +97,13 @@ class MainActivity : ComponentActivity() {
             putExtra("resultCode", resultCode)
             putExtra("data", data)
         }
-        startForegroundService(intent)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        }
+    }
+
+    companion object {
+        private const val REQUEST_NOTIFICATION_PERMISSION = 1001
     }
 }
 
