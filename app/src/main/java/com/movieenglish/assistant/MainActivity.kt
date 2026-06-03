@@ -19,9 +19,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.movieenglish.assistant.floating.FloatingWindowService
+import com.movieenglish.assistant.llama.PreprocessPipeline
+import com.movieenglish.assistant.subtitle.SubtitleRepository
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+
+    private val subtitleRepository by lazy { SubtitleRepository(this) }
+    private var currentMovieId: String? = null
 
     private val mediaProjectionLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -39,14 +46,57 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+    private val subtitlePickerLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            uri?.let { importSubtitle(it) }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             MaterialTheme {
                 MainScreen(
                     onStartOverlay = { startOverlayFlow() },
-                    onImportSubtitle = { /* Task 5 */ }
+                    onImportSubtitle = { subtitlePickerLauncher.launch(arrayOf("*/*")) }
                 )
+            }
+        }
+    }
+
+    private fun importSubtitle(uri: Uri) {
+        lifecycleScope.launch {
+            try {
+                val movieId = uri.lastPathSegment ?: "unknown_${System.currentTimeMillis()}"
+                currentMovieId = movieId
+                val title = movieId
+
+                Toast.makeText(this@MainActivity, "正在导入字幕...", Toast.LENGTH_SHORT).show()
+                val parsed = subtitleRepository.importSubtitle(movieId, title, uri)
+                Toast.makeText(
+                    this@MainActivity,
+                    "已导入 ${parsed.size} 条字幕，开始预处理...",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                val pipeline = PreprocessPipeline(this@MainActivity, subtitleRepository)
+                pipeline.preprocessMovie(movieId) { progress ->
+                    // Progress updates will be wired with a progress dialog in full implementation
+                    if (progress.current % 100 == 0 || progress.current == progress.total) {
+                        Toast.makeText(
+                            this@MainActivity,
+                            "预处理: ${progress.current}/${progress.total}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+
+                Toast.makeText(this@MainActivity, "预处理完成！可以启动悬浮窗了", Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this@MainActivity,
+                    "导入失败: ${e.message}",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
     }
@@ -96,6 +146,7 @@ class MainActivity : ComponentActivity() {
         val intent = Intent(this, FloatingWindowService::class.java).apply {
             putExtra("resultCode", resultCode)
             putExtra("data", data)
+            currentMovieId?.let { putExtra("movieId", it) }
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(intent)
