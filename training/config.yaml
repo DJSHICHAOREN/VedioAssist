@@ -1,0 +1,36 @@
+model:
+  image_height: 32
+  image_channels: 1
+  cnn_output_channels: 512
+  rnn_hidden_size: 256
+  rnn_layers: 2
+  num_classes: 41
+
+training:
+  batch_size: 64
+  epochs: 100
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  early_stop_patience: 15
+
+data:
+  train_annotation: "data/train/annotations.json"
+  val_annotation: "data/val/annotations.json"
+
+distillation:
+  teacher_model: "microsoft/trocr-small-printed"
+  temperature: 3.0
+  alpha: 0.7
+
+pruning:
+  target_sparsity: 0.3
+  finetune_epochs: 10
+
+quantization:
+  calibration_samples: 200
+  output_format: "tflite"
+
+output:
+  model_dir: "output/"
+  tflite_model: "output/ocr_model.tflite"
+  onnx_model: "output/ocr_model.onnx"
