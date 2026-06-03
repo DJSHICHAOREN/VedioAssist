@@ -11,6 +11,7 @@ import android.view.WindowManager
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.LifecycleService
 import com.movieenglish.assistant.App
 import com.movieenglish.assistant.capture.ScreenCaptureManager
 import com.movieenglish.assistant.ocr.OcrEngine
@@ -21,7 +22,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import com.movieenglish.assistant.subtitle.ParsedSubtitle
 
-class FloatingWindowService : Service() {
+class FloatingWindowService : LifecycleService() {
 
     private lateinit var windowManager: WindowManager
     private lateinit var composeView: ComposeView
