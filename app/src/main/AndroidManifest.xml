@@ -31,5 +31,8 @@
             android:foregroundServiceType="mediaProjection"
             android:exported="false" />
 
+        <activity android:name=".floating.WordPopupActivity" android:exported="false" android:theme="@style/Theme.AppCompat.Dialog" />
+        <activity android:name=".floating.SentencePanelActivity" android:exported="false" android:theme="@style/Theme.AppCompat.Dialog" />
+
     </application>
 </manifest>
