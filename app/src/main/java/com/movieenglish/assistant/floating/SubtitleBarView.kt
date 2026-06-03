@@ -4,9 +4,11 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.widget.FrameLayout
 import android.widget.TextView
+import com.movieenglish.assistant.ocr.OcrEngine
 
 class SubtitleBarView(context: Context) : FrameLayout(context) {
 
+    private val ocrEngine = OcrEngine(context)
     private val textView: TextView
     private var lastRecognizedText: String = ""
 
@@ -21,7 +23,10 @@ class SubtitleBarView(context: Context) : FrameLayout(context) {
     }
 
     fun onNewBitmap(bitmap: Bitmap) {
-        // Will be wired to OCR engine in Task 6
-        // For now, placeholder - display will update when OCR is integrated
+        val result = ocrEngine.recognize(bitmap)
+        if (result.text.isNotEmpty() && result.text != lastRecognizedText) {
+            lastRecognizedText = result.text
+            textView.text = result.text
+        }
     }
 }
