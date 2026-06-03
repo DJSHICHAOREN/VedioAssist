@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">电影英语助手</string>
+    <string name="notification_channel">字幕助手</string>
+</resources>
