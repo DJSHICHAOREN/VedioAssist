@@ -14,3 +14,4 @@ dependencyResolutionManagement {
 }
 rootProject.name = "MovieEnglish"
 include(":app")
+include(":annotation-tool")
